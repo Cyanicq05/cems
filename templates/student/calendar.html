@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  {% load static %}
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CEMS — Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#888; --yellow:#f5e642; --green:#b5d98f; --pink:#f5a7c7; }
+    * { box-sizing:border-box; }
+    body { background-color:var(--bg); font-family:'Segoe UI',sans-serif; }
+    .top-navbar { background-color:var(--dark); position:fixed; top:0; left:0; right:0; height:56px; z-index:200; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:var(--dark); }
+    .sidebar { background-color:var(--dark); width:220px; position:fixed; top:56px; left:0; bottom:0; padding:20px 0; z-index:100; }
+    .sidebar-section { font-size:0.7rem; font-weight:600; color:#555; letter-spacing:1px; text-transform:uppercase; padding:0 20px; margin:16px 0 6px; }
+    .sidebar .nav-link { color:#aaa; padding:9px 20px; font-size:0.88rem; border-radius:8px; margin:1px 10px; display:flex; align-items:center; gap:10px; transition:all 0.15s; text-decoration:none; }
+    .sidebar .nav-link:hover { background:#2a2a2a; color:#fff; }
+    .sidebar .nav-link.active { background:var(--yellow); color:var(--dark); font-weight:600; }
+    .main-content { margin-left:220px; padding:76px 28px 28px; }
+    .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); background:var(--card); }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .cal-header { text-align:center; font-size:0.75rem; font-weight:600; color:var(--muted); padding:8px 0; text-transform:uppercase; letter-spacing:0.5px; }
+    .cal-day { min-height:80px; background:#fff; border-radius:10px; padding:6px; border:1.5px solid #f0ece4; position:relative; transition:box-shadow 0.15s; }
+    .cal-day:hover { box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+    .cal-day.today { border-color:var(--dark); background:#fffef5; }
+    .cal-day.other-month { background:#faf8f4; opacity:0.5; }
+    .cal-day-num { font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:4px; }
+    .cal-day.today .cal-day-num { background:var(--dark); color:#fff; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; }
+    .cal-event { font-size:0.68rem; padding:2px 5px; border-radius:4px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; font-weight:500; }
+    .cal-event.available { background:var(--yellow); color:#554400; }
+    .cal-event.registered { background:var(--green); color:#1e4010; }
+    .btn-nav { background:var(--dark); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.85rem; cursor:pointer; }
+    .btn-nav:hover { background:#333; }
+    .legend-dot { width:12px; height:12px; border-radius:3px; display:inline-block; }
+    .event-list-item { padding:12px 16px; border-bottom:1px solid #f0ece4; display:flex; align-items:center; gap:12px; }
+    .event-list-item:last-child { border-bottom:none; }
+    @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
+  </style>
+</head>
+<body>
+
+  <div class="top-navbar">
+    <a class="brand" href="{% url 'student_dashboard' %}"><i class="bi bi-calendar-event"></i>CEMS<div class="brand-dot"></div></a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="avatar">{{ request.user.username|first|upper }}</div>
+      <span style="color:#ddd;font-size:0.85rem;">{{ request.user.get_full_name|default:request.user.username }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">General</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'student_dashboard' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+      <li><a class="nav-link" href="{% url 'browse_events' %}"><i class="bi bi-calendar3"></i>Browse Events</a></li>
+      <li><a class="nav-link" href="{% url 'recommendations' %}"><i class="bi bi-stars"></i>Recommendations</a></li>
+      <li><a class="nav-link active" href="{% url 'calendar_view' %}"><i class="bi bi-calendar-week"></i>Calendar</a></li>
+      <li><a class="nav-link" href="{% url 'my_registrations' %}"><i class="bi bi-bookmark-check"></i>My Registrations</a></li>
+      <li><a class="nav-link" href="{% url 'my_feedback' %}"><i class="bi bi-star"></i>My Feedback</a></li>
+    </ul>
+    <div class="sidebar-section">Account</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'my_profile' %}"><i class="bi bi-person"></i>My Profile</a></li>
+      <li><a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-bold mb-0" style="font-size:1.5rem;">Event Calendar</h4>
+        <p style="color:var(--muted);font-size:0.9rem;margin:4px 0 0;">View all campus events and your registrations.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn-nav"><i class="bi bi-chevron-left"></i></a>
+        <span style="font-size:1rem;font-weight:700;min-width:140px;text-align:center;">{{ month_name }} {{ year }}</span>
+        <a href="?month={{ next_month }}&year={{ next_year }}" class="btn-nav"><i class="bi bi-chevron-right"></i></a>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="d-flex gap-3 mb-3 flex-wrap">
+      <div class="d-flex align-items-center gap-2"><span class="legend-dot" style="background:var(--yellow);"></span><span style="font-size:0.82rem;color:var(--muted);">Available event</span></div>
+      <div class="d-flex align-items-center gap-2"><span class="legend-dot" style="background:var(--green);"></span><span style="font-size:0.82rem;color:var(--muted);">You are registered</span></div>
+      <div class="d-flex align-items-center gap-2"><span class="legend-dot" style="border:2px solid var(--dark);"></span><span style="font-size:0.82rem;color:var(--muted);">Today</span></div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card p-3 mb-4">
+      <div class="calendar-grid mb-2">
+        <div class="cal-header">Mon</div>
+        <div class="cal-header">Tue</div>
+        <div class="cal-header">Wed</div>
+        <div class="cal-header">Thu</div>
+        <div class="cal-header">Fri</div>
+        <div class="cal-header">Sat</div>
+        <div class="cal-header">Sun</div>
+      </div>
+      <div class="calendar-grid">
+        {% for day in calendar_days %}
+        <div class="cal-day {% if day.is_today %}today{% endif %} {% if not day.in_month %}other-month{% endif %}">
+          <div class="cal-day-num">{{ day.day }}</div>
+          {% for event in day.events %}
+          <div class="cal-event {% if event.is_registered %}registered{% else %}available{% endif %}" title="{{ event.title }}" onclick="window.location='{% url 'event_detail' event.id %}'">
+            {{ event.title|truncatechars:14 }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Events this month list -->
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card">
+          <div style="padding:16px 16px 0;font-size:0.95rem;font-weight:700;">Available This Month</div>
+          {% for event in available_events %}
+          <div class="event-list-item">
+            <div style="width:36px;height:36px;background:var(--yellow);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#554400;flex-shrink:0;">{{ event.date|date:"d" }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ event.title }}</div>
+              <div style="font-size:0.75rem;color:var(--muted);">{{ event.date|date:"d M" }} · {{ event.venue }}</div>
+            </div>
+            <a href="{% url 'event_detail' event.id %}" style="font-size:0.78rem;color:var(--dark);text-decoration:none;font-weight:600;white-space:nowrap;">View →</a>
+          </div>
+          {% empty %}
+          <div style="padding:16px;color:var(--muted);font-size:0.88rem;">No events this month.</div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card">
+          <div style="padding:16px 16px 0;font-size:0.95rem;font-weight:700;">My Registered Events This Month</div>
+          {% for reg in registered_this_month %}
+          <div class="event-list-item">
+            <div style="width:36px;height:36px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#1e4010;flex-shrink:0;">{{ reg.event.date|date:"d" }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ reg.event.title }}</div>
+              <div style="font-size:0.75rem;color:var(--muted);">{{ reg.event.date|date:"d M" }} · {{ reg.event.venue }}</div>
+            </div>
+            <span style="font-size:0.75rem;background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-weight:600;">Registered</span>
+          </div>
+          {% empty %}
+          <div style="padding:16px;color:var(--muted);font-size:0.88rem;">No registrations this month.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

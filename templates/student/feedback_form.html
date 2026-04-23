@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  {% load static %}
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CEMS — Leave Feedback</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#888; --yellow:#f5e642; --pink:#f5a7c7; --green:#b5d98f; }
+    * { box-sizing:border-box; }
+    body { background-color:var(--bg); font-family:'Segoe UI',sans-serif; }
+    .top-navbar { background-color:var(--dark); position:fixed; top:0; left:0; right:0; height:56px; z-index:200; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:var(--dark); }
+    .sidebar { background-color:var(--dark); width:220px; position:fixed; top:56px; left:0; bottom:0; padding:20px 0; z-index:100; }
+    .sidebar-section { font-size:0.7rem; font-weight:600; color:#555; letter-spacing:1px; text-transform:uppercase; padding:0 20px; margin:16px 0 6px; }
+    .sidebar .nav-link { color:#aaa; padding:9px 20px; font-size:0.88rem; border-radius:8px; margin:1px 10px; display:flex; align-items:center; gap:10px; transition:all 0.15s; text-decoration:none; }
+    .sidebar .nav-link:hover { background:#2a2a2a; color:#fff; }
+    .sidebar .nav-link.active { background:var(--yellow); color:var(--dark); font-weight:600; }
+    .main-content { margin-left:220px; padding:76px 28px 40px; }
+    .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); background:var(--card); }
+    .form-label { font-size:0.88rem; font-weight:500; color:var(--text); margin-bottom:5px; }
+    .form-control, textarea { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
+    .form-control:focus, textarea:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
+    .btn-dark-custom { background:var(--dark); color:#fff; border:none; border-radius:10px; padding:11px 28px; font-weight:600; font-size:0.9rem; cursor:pointer; }
+    .btn-dark-custom:hover { background:#333; }
+    .btn-outline-custom { background:transparent; color:var(--dark); border:1.5px solid #ccc; border-radius:10px; padding:10px 28px; font-weight:500; font-size:0.9rem; text-decoration:none; display:inline-block; }
+    .btn-outline-custom:hover { border-color:var(--dark); }
+    .star-group { display:flex; gap:8px; flex-direction:row-reverse; justify-content:flex-end; }
+    .star-group input { display:none; }
+    .star-group label { font-size:2rem; color:#ddd; cursor:pointer; transition:color 0.15s; }
+    .star-group input:checked~label, .star-group label:hover, .star-group label:hover~label { color:var(--yellow); -webkit-text-stroke:1px #bba000; }
+    .section-divider { font-size:0.78rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px; padding-bottom:8px; border-bottom:1.5px solid #f0ece4; }
+    .event-summary { background:#faf9f5; border-radius:12px; padding:16px; border-left:4px solid var(--yellow); }
+    @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
+  </style>
+</head>
+<body>
+
+  <div class="top-navbar">
+    <a class="brand" href="{% url 'student_dashboard' %}"><i class="bi bi-calendar-event"></i>CEMS<div class="brand-dot"></div></a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="avatar">{{ request.user.username|first|upper }}</div>
+      <span style="color:#ddd;font-size:0.85rem;">{{ request.user.get_full_name|default:request.user.username }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">General</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'student_dashboard' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+      <li><a class="nav-link" href="{% url 'browse_events' %}"><i class="bi bi-calendar3"></i>Browse Events</a></li>
+      <li><a class="nav-link" href="{% url 'recommendations' %}"><i class="bi bi-stars"></i>Recommendations</a></li>
+      <li><a class="nav-link" href="{% url 'calendar_view' %}"><i class="bi bi-calendar-week"></i>Calendar</a></li>
+      <li><a class="nav-link" href="{% url 'my_registrations' %}"><i class="bi bi-bookmark-check"></i>My Registrations</a></li>
+      <li><a class="nav-link active" href="{% url 'my_feedback' %}"><i class="bi bi-star"></i>My Feedback</a></li>
+    </ul>
+    <div class="sidebar-section">Account</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'my_profile' %}"><i class="bi bi-person"></i>My Profile</a></li>
+      <li><a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <a href="{% url 'event_detail' event.id %}" style="font-size:0.85rem;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;">
+      <i class="bi bi-arrow-left"></i> Back to event
+    </a>
+    <div class="mb-4">
+      <h4 class="fw-bold mb-0" style="font-size:1.5rem;">Leave Feedback</h4>
+      <p style="color:var(--muted);font-size:0.9rem;margin:4px 0 0;">Share your experience to help improve future events.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        {% if submitted %}
+        <div style="background:var(--green);border-radius:16px;padding:32px;text-align:center;margin-bottom:20px;">
+          <i class="bi bi-check-circle" style="font-size:2.5rem;color:var(--dark);display:block;margin-bottom:10px;"></i>
+          <h5 class="fw-bold mb-1">Thank you for your feedback!</h5>
+          <p style="font-size:0.88rem;color:#444;margin-bottom:16px;">Your response has been recorded.</p>
+          <a href="{% url 'browse_events' %}" style="background:var(--dark);color:#fff;border-radius:10px;padding:10px 24px;text-decoration:none;font-weight:600;font-size:0.9rem;">Browse Events</a>
+        </div>
+        {% else %}
+        <div class="card p-4">
+          <div class="section-divider">Event</div>
+          <div class="event-summary mb-4">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="fw-bold mb-1">{{ event.title }}</h6>
+                <div style="font-size:0.82rem;color:var(--muted);">
+                  <i class="bi bi-calendar3 me-1"></i>{{ event.date|date:"d M Y" }}
+                  <span class="ms-2"><i class="bi bi-geo-alt me-1"></i>{{ event.venue }}</span>
+                </div>
+              </div>
+              <span class="badge" style="background:var(--yellow);color:#555;">{{ event.category.name }}</span>
+            </div>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="section-divider">Your Rating</div>
+            <div class="mb-4">
+              <label class="form-label mb-3">How would you rate this event? <span style="color:#c62828;">*</span></label>
+              <div class="star-group">
+                <input type="radio" id="s5" name="rating" value="5" required/><label for="s5">&#9733;</label>
+                <input type="radio" id="s4" name="rating" value="4"/><label for="s4">&#9733;</label>
+                <input type="radio" id="s3" name="rating" value="3"/><label for="s3">&#9733;</label>
+                <input type="radio" id="s2" name="rating" value="2"/><label for="s2">&#9733;</label>
+                <input type="radio" id="s1" name="rating" value="1"/><label for="s1">&#9733;</label>
+              </div>
+              <div id="ratingLabel" style="font-size:0.82rem;color:var(--muted);margin-top:8px;">Click a star to rate</div>
+            </div>
+
+            <div class="section-divider">Your Comment</div>
+            <div class="mb-4">
+              <label class="form-label">Comment <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+              <textarea name="comment" class="form-control" rows="4" placeholder="What did you enjoy? What could be improved?"></textarea>
+            </div>
+
+            <div class="d-flex gap-3 flex-wrap">
+              <button type="submit" class="btn-dark-custom"><i class="bi bi-send me-2"></i>Submit Feedback</button>
+              <a href="{% url 'event_detail' event.id %}" class="btn-outline-custom">Cancel</a>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card p-4" style="position:sticky;top:76px;">
+          <h6 class="fw-bold mb-3">Why your feedback matters</h6>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="width:32px;height:32px;border-radius:10px;background:var(--yellow);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-stars" style="font-size:0.9rem;color:var(--dark);"></i></div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:0;">Your rating helps the <strong>KNN recommendation engine</strong> suggest better events for you and similar students.</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="width:32px;height:32px;border-radius:10px;background:var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-graph-up" style="font-size:0.9rem;color:var(--dark);"></i></div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:0;">Event organisers use your comments to improve future events.</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="width:32px;height:32px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-shield-check" style="font-size:0.9rem;color:var(--dark);"></i></div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:0;">All feedback is anonymous to other students.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    document.querySelectorAll('.star-group input').forEach(function(inp) {
+      inp.addEventListener('change', function() {
+        document.getElementById('ratingLabel').textContent = labels[this.value] + ' (' + this.value + '/5)';
+      });
+    });
+  </script>
+</body>
+</html>

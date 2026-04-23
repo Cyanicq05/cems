@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  {% load static %}
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CEMS — Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#888; --yellow:#f5e642; --pink:#f5a7c7; --green:#b5d98f; }
+    * { box-sizing:border-box; }
+    body { background-color:var(--bg); font-family:'Segoe UI',sans-serif; }
+    .top-navbar { background-color:var(--dark); position:fixed; top:0; left:0; right:0; height:56px; z-index:200; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--pink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:var(--dark); }
+    .sidebar { background-color:var(--dark); width:220px; position:fixed; top:56px; left:0; bottom:0; padding:20px 0; z-index:100; }
+    .sidebar-section { font-size:0.7rem; font-weight:600; color:#555; letter-spacing:1px; text-transform:uppercase; padding:0 20px; margin:16px 0 6px; }
+    .sidebar .nav-link { color:#aaa; padding:9px 20px; font-size:0.88rem; border-radius:8px; margin:1px 10px; display:flex; align-items:center; gap:10px; transition:all 0.15s; text-decoration:none; }
+    .sidebar .nav-link:hover { background:#2a2a2a; color:#fff; }
+    .sidebar .nav-link.active { background:var(--pink); color:var(--dark); font-weight:600; }
+    .main-content { margin-left:220px; padding:76px 28px 28px; }
+    .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); background:var(--card); }
+    .stat-card { border-radius:16px!important; padding:20px; }
+    .stat-yellow { background:var(--yellow)!important; }
+    .stat-pink { background:var(--pink)!important; }
+    .stat-green { background:var(--green)!important; }
+    .stat-dark { background:var(--dark)!important; }
+    .stat-blue { background:#bfdbfe!important; }
+    .stat-number { font-size:2rem; font-weight:700; }
+    .stat-label { font-size:0.82rem; font-weight:500; margin-bottom:4px; }
+    .btn-dark-sm { background:var(--dark); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:500; text-decoration:none; display:inline-block; }
+    .btn-dark-sm:hover { background:#333; color:#fff; }
+    .btn-yellow-sm { background:var(--yellow); color:var(--dark); border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:600; text-decoration:none; display:inline-block; }
+    .btn-yellow-sm:hover { background:#e8d800; color:var(--dark); }
+    .btn-outline-sm { background:transparent; color:var(--dark); border:1.5px solid var(--dark); border-radius:8px; padding:5px 14px; font-size:0.82rem; text-decoration:none; display:inline-block; }
+    .btn-outline-sm:hover { background:var(--dark); color:#fff; }
+    .table th { font-size:0.8rem; color:var(--muted); font-weight:500; background:#faf9f5; }
+    .table td { font-size:0.85rem; color:var(--text); vertical-align:middle; }
+    .cap-bar { background:#f0ece4; border-radius:10px; height:6px; overflow:hidden; margin-top:4px; }
+    .cap-fill { background:var(--dark); height:100%; border-radius:10px; }
+    @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
+  </style>
+</head>
+<body>
+
+  <div class="top-navbar">
+    <a class="brand" href="{% url 'admin_dashboard' %}"><i class="bi bi-calendar-event"></i>CEMS<div class="brand-dot"></div></a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="background:var(--pink);color:var(--dark);font-size:0.75rem;padding:3px 10px;border-radius:20px;font-weight:600;">Admin</span>
+      <div class="avatar">AD</div>
+      <span style="color:#ddd;font-size:0.85rem;">{{ request.user.username }}</span>
+      <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-right" style="color:#aaa;font-size:1.1rem;"></i></a>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">General</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link active" href="{% url 'admin_dashboard' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+      <li><a class="nav-link" href="{% url 'admin_calendar' %}"><i class="bi bi-calendar-week"></i>Calendar</a></li>
+      <li><a class="nav-link" href="{% url 'event_create' %}"><i class="bi bi-plus-circle"></i>Create Event</a></li>
+    </ul>
+    <div class="sidebar-section">Account</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+
+    {% if messages %}
+    <div style="margin-bottom:16px;">
+      {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert" style="border-radius:12px;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mb-4">
+      <h4 class="fw-bold mb-0" style="font-size:1.5rem;">Good morning, {{ request.user.first_name|default:request.user.username }}</h4>
+      <p style="color:var(--muted);font-size:0.9rem;margin:4px 0 0;">Here's an overview of your campus events today.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4 col-lg-2">
+        <div class="card stat-card stat-yellow">
+          <div class="stat-label" style="color:#555;">Total Events</div>
+          <div class="stat-number" style="color:var(--dark);">{{ total_events }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4 col-lg-2">
+        <div class="card stat-card stat-blue">
+          <div class="stat-label" style="color:#555;">Upcoming</div>
+          <div class="stat-number" style="color:var(--dark);">{{ upcoming_events_count }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4 col-lg-3">
+        <div class="card stat-card stat-pink">
+          <div class="stat-label" style="color:#555;">Active Registrations</div>
+          <div class="stat-number" style="color:var(--dark);">{{ total_registrations }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4 col-lg-2">
+        <div class="card stat-card stat-green">
+          <div class="stat-label" style="color:#555;">Feedback Given</div>
+          <div class="stat-number" style="color:var(--dark);">{{ total_feedback }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4 col-lg-3">
+        <div class="card stat-card stat-dark">
+          <div class="stat-label" style="color:#aaa;">Total Students</div>
+          <div class="stat-number" style="color:#fff;">{{ total_students }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span style="font-size:1rem;font-weight:700;">All Events</span>
+        <a href="{% url 'event_create' %}" class="btn-yellow-sm"><i class="bi bi-plus me-1"></i>Create Event</a>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="ps-3">Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Registrations</th>
+                <th>Capacity</th>
+                <th>Feedback</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in event_stats %}
+              <tr>
+                <td class="ps-3 fw-500">{{ item.event.title }}</td>
+                <td><span class="badge" style="background:var(--yellow);color:#555;">{{ item.event.category.name }}</span></td>
+                <td>{{ item.event.date|date:"d M Y" }}</td>
+                <td>
+                  {{ item.reg_count }} / {{ item.event.capacity }}
+                  <div class="cap-bar">
+                    <div class="cap-fill" style="width:{% if item.event.capacity > 0 %}{% widthratio item.reg_count item.event.capacity 100 %}%{% else %}0%{% endif %};"></div>
+                  </div>
+                </td>
+                <td>
+                  {% if item.remaining <= 0 %}
+                  <span class="badge" style="background:#fdecea;color:#c62828;">Full</span>
+                  {% elif item.remaining <= 5 %}
+                  <span class="badge" style="background:#fff3e0;color:#e65100;">{{ item.remaining }} left</span>
+                  {% else %}
+                  <span class="badge" style="background:#e8f5e9;color:#2e7d32;">{{ item.remaining }} left</span>
+                  {% endif %}
+                </td>
+                <td>{{ item.feedback_count }}</td>
+                <td>
+                  {% if item.is_past %}
+                  <span class="badge" style="background:#f5f5f5;color:#888;">Past</span>
+                  {% else %}
+                  <span class="badge" style="background:#e8f5e9;color:#2e7d32;">Active</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'event_edit' item.event.id %}" class="btn-outline-sm me-1">Edit</a>
+                  <form method="post" action="{% url 'event_delete' item.event.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-dark-sm" style="background:#c62828;" onclick="return confirm('Delete this event?')">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="8" class="text-center ps-3" style="color:var(--muted);">No events yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span style="font-size:1rem;font-weight:700;">Recent Registrations</span>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="ps-3">Student</th>
+                <th>Event</th>
+                <th>Registered At</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reg in recent_registrations %}
+              <tr>
+                <td class="ps-3">{{ reg.student.get_full_name|default:reg.student.username }}</td>
+                <td>{{ reg.event.title }}</td>
+                <td>{{ reg.registered_at|date:"d M Y" }}</td>
+                <td>
+                  {% if reg.status == 'registered' %}
+                  <span class="badge" style="background:#e8f5e9;color:#2e7d32;">Registered</span>
+                  {% else %}
+                  <span class="badge" style="background:#fdecea;color:#c62828;">Cancelled</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center ps-3" style="color:var(--muted);">No registrations yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  {% load static %}
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CEMS — My Registrations</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#888; --yellow:#f5e642; --green:#b5d98f; --pink:#f5a7c7; }
+    * { box-sizing:border-box; }
+    body { background-color:var(--bg); font-family:'Segoe UI',sans-serif; }
+    .top-navbar { background-color:var(--dark); position:fixed; top:0; left:0; right:0; height:56px; z-index:200; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; color:var(--dark); }
+    .sidebar { background-color:var(--dark); width:220px; position:fixed; top:56px; left:0; bottom:0; padding:20px 0; z-index:100; }
+    .sidebar-section { font-size:0.7rem; font-weight:600; color:#555; letter-spacing:1px; text-transform:uppercase; padding:0 20px; margin:16px 0 6px; }
+    .sidebar .nav-link { color:#aaa; padding:9px 20px; font-size:0.88rem; border-radius:8px; margin:1px 10px; display:flex; align-items:center; gap:10px; transition:all 0.15s; text-decoration:none; }
+    .sidebar .nav-link:hover { background:#2a2a2a; color:#fff; }
+    .sidebar .nav-link.active { background:var(--yellow); color:var(--dark); font-weight:600; }
+    .main-content { margin-left:220px; padding:76px 28px 40px; }
+    .card { border:none; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); background:var(--card); }
+    .btn-dark-sm { background:var(--dark); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:500; text-decoration:none; display:inline-block; cursor:pointer; }
+    .btn-dark-sm:hover { background:#333; color:#fff; }
+    .btn-danger-sm { background:#c62828; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:500; cursor:pointer; }
+    .btn-danger-sm:hover { background:#a31e1e; }
+    .reg-card { border-radius:14px; padding:18px; margin-bottom:12px; border:1.5px solid #eee; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; transition:box-shadow 0.2s; }
+    .reg-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+    .reg-card.yellow { border-left:4px solid var(--yellow); }
+    .cancelled-label { font-size:0.8rem; color:#ccc; font-style:italic; }
+    @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
+  </style>
+</head>
+<body>
+
+  <div class="top-navbar">
+    <a class="brand" href="{% url 'browse_events' %}"><i class="bi bi-calendar-event"></i>CEMS<div class="brand-dot"></div></a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="avatar">{{ request.user.username|first|upper }}</div>
+      <span style="color:#ddd;font-size:0.85rem;">{{ request.user.username }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">General</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'student_dashboard' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+      <li><a class="nav-link" href="{% url 'browse_events' %}"><i class="bi bi-calendar3"></i>Browse Events</a></li>
+      <li><a class="nav-link" href="{% url 'recommendations' %}"><i class="bi bi-stars"></i>Recommendations</a></li>
+      <li><a class="nav-link" href="{% url 'calendar_view' %}"><i class="bi bi-calendar-week"></i>Calendar</a></li>
+      <li><a class="nav-link active" href="{% url 'my_registrations' %}"><i class="bi bi-bookmark-check"></i>My Registrations</a></li>
+      <li><a class="nav-link" href="{% url 'my_feedback' %}"><i class="bi bi-star"></i>My Feedback</a></li>
+    </ul>
+    <div class="sidebar-section">Account</div>
+    <ul class="nav flex-column">
+      <li><a class="nav-link" href="{% url 'my_profile' %}"><i class="bi bi-person"></i>My Profile</a></li>
+      <li><a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+    <div style="margin-bottom:16px;">
+      {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert" style="border-radius:12px;">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mb-4">
+      <h4 class="fw-bold mb-0" style="font-size:1.5rem;">My Registrations</h4>
+      <p style="color:var(--muted);font-size:0.9rem;margin:4px 0 0;">All events you have registered for.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="card p-3" style="border-top:4px solid var(--yellow);">
+          <div style="font-size:0.8rem;color:#554400;margin-bottom:4px;">Total Registered</div>
+          <div style="font-size:1.8rem;font-weight:700;color:var(--dark);">{{ registrations.count }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card p-3" style="border-top:4px solid var(--green);">
+          <div style="font-size:0.8rem;color:#1e4010;margin-bottom:4px;">Active</div>
+          <div style="font-size:1.8rem;font-weight:700;color:var(--dark);">{{ active_count }}</div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card p-3" style="border-top:4px solid var(--pink);">
+          <div style="font-size:0.8rem;color:#5a1530;margin-bottom:4px;">Cancelled</div>
+          <div style="font-size:1.8rem;font-weight:700;color:var(--dark);">{{ cancelled_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="regList">
+      {% for reg in registrations %}
+      <div class="reg-card yellow" data-status="{{ reg.status }}">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span class="badge" style="background:var(--yellow);color:#554400;">{{ reg.event.category.name }}</span>
+            {% if reg.status == 'registered' %}
+            <span class="badge" style="background:#e8f5e9;color:#2e7d32;">Registered</span>
+            {% else %}
+            <span class="badge" style="background:#fdecea;color:#c62828;">Cancelled</span>
+            {% endif %}
+          </div>
+          <h6 class="fw-bold mb-1">{{ reg.event.title }}</h6>
+          <div style="font-size:0.82rem;color:var(--muted);">
+            <i class="bi bi-calendar3 me-1"></i>{{ reg.event.date|date:"d M Y" }}
+            <span class="ms-2"><i class="bi bi-geo-alt me-1"></i>{{ reg.event.venue }}</span>
+            <span class="ms-2"><i class="bi bi-clock me-1"></i>{{ reg.event.time|time:"H:i" }}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <a href="{% url 'event_detail' reg.event.id %}" class="btn-dark-sm">View</a>
+          {% if reg.status == 'registered' %}
+          <form method="post" action="{% url 'cancel_registration' reg.id %}">{% csrf_token %}<button type="submit" class="btn-danger-sm">Cancel</button></form>
+          {% else %}
+          <span class="cancelled-label">Already cancelled</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-5">
+        <i class="bi bi-bookmark" style="font-size:2rem;color:var(--muted);display:block;margin-bottom:12px;"></i>
+        <div style="font-size:0.95rem;font-weight:600;color:var(--text);">No registrations yet</div>
+        <div style="font-size:0.85rem;color:var(--muted);">Browse events and register for one!</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-4 text-center">
+      <a href="{% url 'browse_events' %}" class="btn-dark-sm" style="padding:10px 24px;font-size:0.9rem;"><i class="bi bi-calendar3 me-2"></i>Browse more events</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
