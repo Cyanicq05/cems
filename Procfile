@@ -1,1 +1,1 @@
-web: gunicorn cems.wsgi --log-file -
+web: python manage.py migrate && gunicorn cems.wsgi --log-file -
