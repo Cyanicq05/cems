@@ -147,14 +147,26 @@ def recommendations(request):
 @login_required(login_url='/login/')
 def student_dashboard(request):
     from .recommender import get_recommendations
+    from django.db.models import Count
     registrations = Registration.objects.filter(student=request.user, status='registered')
     feedback_count = Feedback.objects.filter(student=request.user).count()
     recommended_events = get_recommendations(request.user, n_recommendations=3)
+
+    # Fallback for new users: show upcoming popular events by registration count
+    is_new_user = not recommended_events
+    if is_new_user:
+        recommended_events = Event.objects.filter(
+            date__gte=datetime.date.today()
+        ).annotate(
+            reg_count=Count('registration')
+        ).order_by('-reg_count')[:3]
+
     context = {
         'registrations': registrations,
         'registered_count': registrations.count(),
         'feedback_count': feedback_count,
         'recommended_events': recommended_events,
+        'is_new_user': is_new_user,
     }
     return render(request, 'student/dashboard.html', context)
 
@@ -171,7 +183,6 @@ def admin_dashboard(request):
 
     today = datetime.date.today()
 
-    # Build enriched event list with extra stats
     all_events = Event.objects.all().order_by('date')
     event_stats = []
     for event in all_events:
@@ -254,10 +265,6 @@ def event_delete(request, event_id):
         messages.success(request, 'Event deleted successfully.')
     return redirect('admin_dashboard')
 
-# Add this import at the top of views.py (with your other imports):
-# import calendar as cal_module
-
-# Add this view to views.py:
 
 @login_required(login_url='/login/')
 def calendar_view(request):
@@ -267,7 +274,6 @@ def calendar_view(request):
     month = int(request.GET.get('month', today.month))
     year = int(request.GET.get('year', today.year))
 
-    # Handle month overflow
     if month > 12:
         month = 1
         year += 1
@@ -275,10 +281,8 @@ def calendar_view(request):
         month = 12
         year -= 1
 
-    # Get all events this month
     events_this_month = Event.objects.filter(date__year=year, date__month=month)
 
-    # Get student's registrations this month
     my_registrations = Registration.objects.filter(
         student=request.user,
         event__date__year=year,
@@ -288,23 +292,14 @@ def calendar_view(request):
 
     registered_event_ids = set(r.event.id for r in my_registrations)
 
-    # Build calendar days
-    cal = cal_module.monthcalendar(year, month)
-    calendar_days = []
-
-    # Get first weekday of month and number of days
     first_weekday, num_days = cal_module.monthrange(year, month)
-
-    # Build flat list of days (Mon=0 start)
-    # Pad start
-    start_pad = first_weekday  # Monday=0
+    start_pad = first_weekday
     prev_month = month - 1 if month > 1 else 12
     prev_year = year if month > 1 else year - 1
     prev_month_days = cal_module.monthrange(prev_year, prev_month)[1]
 
     all_days = []
 
-    # Previous month padding
     for i in range(start_pad):
         day_num = prev_month_days - start_pad + i + 1
         all_days.append({
@@ -315,7 +310,6 @@ def calendar_view(request):
             'date': datetime.date(prev_year, prev_month, day_num),
         })
 
-    # Current month days
     for d in range(1, num_days + 1):
         date = datetime.date(year, month, d)
         day_events = []
@@ -334,7 +328,6 @@ def calendar_view(request):
             'date': date,
         })
 
-    # Next month padding to complete grid (multiple of 7)
     remainder = len(all_days) % 7
     if remainder != 0:
         next_month = month + 1 if month < 12 else 1
@@ -345,20 +338,17 @@ def calendar_view(request):
                 'in_month': False,
                 'is_today': False,
                 'events': [],
-                'date': datetime.date(next_month if next_month <= 12 else 1, next_month if next_month <= 12 else 1, i),
+                'date': datetime.date(next_year, next_month, i),
             })
 
-    # Prev/next month nav
     prev_month_nav = month - 1 if month > 1 else 12
     prev_year_nav = year if month > 1 else year - 1
     next_month_nav = month + 1 if month < 12 else 1
     next_year_nav = year if month < 12 else year + 1
 
-    month_name = datetime.date(year, month, 1).strftime('%B')
-
     context = {
         'calendar_days': all_days,
-        'month_name': month_name,
+        'month_name': datetime.date(year, month, 1).strftime('%B'),
         'year': year,
         'prev_month': prev_month_nav,
         'prev_year': prev_year_nav,
@@ -369,30 +359,80 @@ def calendar_view(request):
     }
     return render(request, 'student/calendar.html', context)
 
-# Add this view to events/views.py
 
 @login_required(login_url='/login/')
-def student_dashboard(request):
-    from .recommender import get_recommendations
-    registrations = Registration.objects.filter(student=request.user, status='registered')
-    feedback_count = Feedback.objects.filter(student=request.user).count()
-    recommended_events = get_recommendations(request.user, n_recommendations=3)
+def admin_calendar(request):
+    import calendar as cal_module
 
-    # Fallback for new users: show upcoming popular events by registration count
-    is_new_user = not recommended_events
-    if is_new_user:
-        from django.db.models import Count
-        recommended_events = Event.objects.filter(
-            date__gte=datetime.date.today()
-        ).annotate(
-            reg_count=Count('registration')
-        ).order_by('-reg_count')[:3]
+    if request.user.role != 'admin':
+        return redirect('student_dashboard')
+
+    today = datetime.date.today()
+    month = int(request.GET.get('month', today.month))
+    year = int(request.GET.get('year', today.year))
+
+    if month > 12:
+        month = 1
+        year += 1
+    if month < 1:
+        month = 12
+        year -= 1
+
+    events_this_month = Event.objects.filter(date__year=year, date__month=month).order_by('date')
+
+    enriched_events = []
+    for event in events_this_month:
+        reg_count = Registration.objects.filter(event=event, status='registered').count()
+        enriched_events.append({
+            'id': event.id,
+            'title': event.title,
+            'date': event.date,
+            'venue': event.venue,
+            'capacity': event.capacity,
+            'reg_count': reg_count,
+            'is_past': event.date < today,
+            'is_full': reg_count >= event.capacity,
+        })
+
+    first_weekday, num_days = cal_module.monthrange(year, month)
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    prev_month_days = cal_module.monthrange(prev_year, prev_month)[1]
+
+    all_days = []
+
+    for i in range(first_weekday):
+        day_num = prev_month_days - first_weekday + i + 1
+        all_days.append({'day': day_num, 'in_month': False, 'is_today': False, 'events': []})
+
+    for d in range(1, num_days + 1):
+        date = datetime.date(year, month, d)
+        day_events = [e for e in enriched_events if e['date'] == date]
+        all_days.append({'day': d, 'in_month': True, 'is_today': date == today, 'events': day_events})
+
+    remainder = len(all_days) % 7
+    if remainder != 0:
+        for i in range(1, 7 - remainder + 1):
+            all_days.append({'day': i, 'in_month': False, 'is_today': False, 'events': []})
+
+    prev_month_nav = month - 1 if month > 1 else 12
+    prev_year_nav = year if month > 1 else year - 1
+    next_month_nav = month + 1 if month < 12 else 1
+    next_year_nav = year if month < 12 else year + 1
+
+    upcoming_count = sum(1 for e in enriched_events if not e['is_past'])
+    past_count = sum(1 for e in enriched_events if e['is_past'])
 
     context = {
-        'registrations': registrations,
-        'registered_count': registrations.count(),
-        'feedback_count': feedback_count,
-        'recommended_events': recommended_events,
-        'is_new_user': is_new_user,
+        'calendar_days': all_days,
+        'month_name': datetime.date(year, month, 1).strftime('%B'),
+        'year': year,
+        'prev_month': prev_month_nav,
+        'prev_year': prev_year_nav,
+        'next_month': next_month_nav,
+        'next_year': next_year_nav,
+        'all_events': enriched_events,
+        'upcoming_count': upcoming_count,
+        'past_count': past_count,
     }
-    return render(request, 'student/dashboard.html', context)
+    return render(request, 'admin/calendar.html', context)
