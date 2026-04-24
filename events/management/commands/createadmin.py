@@ -3,7 +3,7 @@ from accounts.models import CustomUser
 
 
 class Command(BaseCommand):
-    help = 'Creates the default admin user'
+    help = 'Creates or resets the default admin user'
 
     def handle(self, *args, **kwargs):
         if not CustomUser.objects.filter(username='admin').exists():
@@ -14,4 +14,10 @@ class Command(BaseCommand):
             u.save()
             self.stdout.write('Admin created!')
         else:
-            self.stdout.write('Admin already exists.')
+            u = CustomUser.objects.get(username='admin')
+            u.set_password('Admin1234!')
+            u.role = 'admin'
+            u.is_staff = True
+            u.is_superuser = True
+            u.save()
+            self.stdout.write('Admin password reset!')
