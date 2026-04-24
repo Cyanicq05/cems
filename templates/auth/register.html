@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   {% load static %}
@@ -10,166 +9,30 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #f5f0e8;
-      --dark: #1a1a1a;
-      --card: #ffffff;
-      --text: #1a1a1a;
-      --muted: #777;
-      --yellow: #f5e642;
-      --green: #b5d98f;
-      --pink: #f5a7c7;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      background-color: var(--bg);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    .top-bar {
-      background-color: var(--dark);
-      height: 54px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      justify-content: space-between;
-    }
-
-    .brand {
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #fff;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .brand-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--yellow);
-    }
-
-    .register-card {
-      background: var(--card);
-      border-radius: 20px;
-      border: none;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
-    }
-
-    .card-accent {
-      height: 6px;
-      background: linear-gradient(90deg, var(--green) 33%, var(--yellow) 33% 66%, var(--pink) 66%);
-    }
-
-    .logo-box {
-      width: 56px;
-      height: 56px;
-      background: var(--green);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 10px;
-    }
-
-    .nav-tabs {
-      border-bottom: 1px solid #eee;
-    }
-
-    .nav-tabs .nav-link {
-      color: var(--muted);
-      font-size: 0.9rem;
-      border: none;
-    }
-
-    .nav-tabs .nav-link.active {
-      color: var(--text);
-      font-weight: 600;
-      border-bottom: 2px solid var(--dark);
-      background: none;
-    }
-
-    .form-control,
-    .form-select {
-      border-color: #ddd;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.9rem;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      border-color: var(--dark);
-      box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
-    }
-
-    .input-group-text {
-      background: #f9f9f9;
-      border-color: #ddd;
-      border-radius: 10px 0 0 10px;
-    }
-
-    .input-group .form-control,
-    .input-group .form-select {
-      border-radius: 0 10px 10px 0;
-    }
-
-    .btn-dark-custom {
-      background-color: var(--dark);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 11px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      width: 100%;
-      cursor: pointer;
-    }
-
-    .btn-dark-custom:hover {
-      background: #333;
-    }
-
-    .info-note {
-      background: #fffde7;
-      border-left: 3px solid var(--yellow);
-      border-radius: 0 8px 8px 0;
-      padding: 8px 12px;
-      font-size: 0.8rem;
-      color: #665500;
-    }
-
-    .alert-error {
-      background: #fff0f0;
-      border: 1px solid #ffcccc;
-      color: #cc0000;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.88rem;
-      margin-bottom: 16px;
-    }
-
-    a {
-      color: var(--dark);
-    }
-
-    footer {
-      margin-top: auto;
-    }
+    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#777; --yellow:#f5e642; --green:#b5d98f; --pink:#f5a7c7; }
+    * { box-sizing:border-box; }
+    body { background-color:var(--bg); min-height:100vh; display:flex; flex-direction:column; font-family:'Segoe UI',sans-serif; }
+    .top-bar { background-color:var(--dark); height:54px; display:flex; align-items:center; padding:0 24px; justify-content:space-between; }
+    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+    .register-card { background:var(--card); border-radius:20px; border:none; box-shadow:0 4px 24px rgba(0,0,0,0.08); overflow:hidden; }
+    .card-accent { height:6px; background:linear-gradient(90deg,var(--green) 33%,var(--yellow) 33% 66%,var(--pink) 66%); }
+    .logo-box { width:56px; height:56px; background:var(--green); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
+    .nav-tabs { border-bottom:1px solid #eee; }
+    .nav-tabs .nav-link { color:var(--muted); font-size:0.9rem; border:none; }
+    .nav-tabs .nav-link.active { color:var(--text); font-weight:600; border-bottom:2px solid var(--dark); background:none; }
+    .form-control,.form-select { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
+    .form-control:focus,.form-select:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
+    .input-group-text { background:#f9f9f9; border-color:#ddd; border-radius:10px 0 0 10px; }
+    .input-group .form-control,.input-group .form-select { border-radius:0 10px 10px 0; }
+    .btn-dark-custom { background-color:var(--dark); color:#fff; border:none; border-radius:10px; padding:11px; font-weight:600; font-size:0.9rem; width:100%; cursor:pointer; margin-top:8px; }
+    .btn-dark-custom:hover { background:#333; }
+    .info-note { background:#fffde7; border-left:3px solid var(--yellow); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.8rem; color:#665500; }
+    .alert-error { background:#fff0f0; border:1px solid #ffcccc; color:#cc0000; border-radius:10px; padding:10px 14px; font-size:0.88rem; margin-bottom:16px; }
+    a { color:var(--dark); }
+    footer { margin-top:auto; }
   </style>
 </head>
-
 <body>
 
   <div class="top-bar">
@@ -229,9 +92,11 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Email address</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                <input type="email" name="email" class="form-control" placeholder="w12345678@northumbria.ac.uk"
+                <input type="email" name="email" class="form-control"
+                  placeholder="w12345678@northumbria.ac.uk"
                   pattern="^[a-zA-Z0-9._%+\-]+@northumbria\.ac\.uk$"
-                  title="Please use your Northumbria University email (@northumbria.ac.uk)" required />
+                  title="Please use your Northumbria University email (@northumbria.ac.uk)"
+                  required />
               </div>
             </div>
             <div class="mb-3">
@@ -248,17 +113,17 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Confirm password</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
-                <input type="password" name="password2" class="form-control" placeholder="Repeat your password"
-                  required />
+                <input type="password" name="password2" class="form-control" placeholder="Repeat your password" required />
               </div>
+            </div>
 
-              <button type="submit" class="btn-dark-custom">
-                <i class="bi bi-person-plus me-2"></i>Create Account
-              </button>
+            <button type="submit" class="btn-dark-custom">
+              <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
 
-              <p class="text-center mt-3 mb-0" style="font-size:0.85rem;color:var(--muted);">
-                Already have an account? <a href="{% url 'login' %}"><strong>Log In</strong></a>
-              </p>
+            <p class="text-center mt-3 mb-0" style="font-size:0.85rem;color:var(--muted);">
+              Already have an account? <a href="{% url 'login' %}"><strong>Log In</strong></a>
+            </p>
           </form>
         </div>
       </div>
@@ -271,5 +136,4 @@
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
