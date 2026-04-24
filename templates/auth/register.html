@@ -199,7 +199,7 @@
 
           <div class="info-note mb-3">
             <i class="bi bi-envelope me-1"></i>
-            Use your university email to create a student account.
+            You must use your Northumbria University email (<strong>@northumbria.ac.uk</strong>) to register.
           </div>
 
           {% if error %}
@@ -226,7 +226,11 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Email address</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                <input type="email" name="email" class="form-control" placeholder="student@university.ac.uk" required />
+                <input type="email" name="email" class="form-control"
+                  placeholder="w12345678@northumbria.ac.uk"
+                  pattern="^[a-zA-Z0-9._%+\-]+@northumbria\.ac\.uk$"
+                  title="Please use your Northumbria University email (@northumbria.ac.uk)"
+                  required />
               </div>
             </div>
             <div class="mb-3">

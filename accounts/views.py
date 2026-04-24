@@ -33,6 +33,9 @@ def register_view(request):
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
+        if not email.endswith('@northumbria.ac.uk'):
+            return render(request, 'auth/register.html', {'error': 'Please use your Northumbria University email (@northumbria.ac.uk).'})
+
         if password1 != password2:
             return render(request, 'auth/register.html', {'error': 'Passwords do not match.'})
 

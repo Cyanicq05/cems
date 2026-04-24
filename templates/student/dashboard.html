@@ -33,6 +33,7 @@
     .event-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.1); }
     .event-card.yellow { border-top:4px solid var(--yellow); }
     .knn-badge { background:var(--yellow); color:#554400; font-size:0.72rem; padding:3px 10px; border-radius:20px; font-weight:600; }
+    .popular-badge { background:var(--green); color:#1e4010; font-size:0.72rem; padding:3px 10px; border-radius:20px; font-weight:600; }
     .btn-dark-sm { background:var(--dark); color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:0.82rem; font-weight:500; text-decoration:none; display:inline-block; }
     .btn-dark-sm:hover { background:#333; color:#fff; }
     .btn-outline-sm { background:transparent; color:var(--dark); border:1.5px solid var(--dark); border-radius:8px; padding:5px 14px; font-size:0.82rem; font-weight:500; text-decoration:none; display:inline-block; }
@@ -40,6 +41,7 @@
     .table th { font-size:0.8rem; color:var(--muted); font-weight:500; background:#faf9f5; }
     .table td { font-size:0.85rem; color:var(--text); vertical-align:middle; }
     .knn-note { background:#fffde7; border-left:3px solid var(--yellow); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.8rem; color:#665500; margin-bottom:14px; }
+    .popular-note { background:#f0f7e9; border-left:3px solid var(--green); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.8rem; color:#1e4010; margin-bottom:14px; }
     @media(max-width:768px){ .sidebar{display:none;} .main-content{margin-left:0;} }
   </style>
 </head>
@@ -104,22 +106,40 @@
     <div class="mb-4">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="d-flex align-items-center gap-2">
+          {% if is_new_user %}
+          <span style="font-size:1rem;font-weight:700;">Popular Events</span>
+          <span class="popular-badge"><i class="bi bi-fire me-1"></i>Trending</span>
+          {% else %}
           <span style="font-size:1rem;font-weight:700;">Recommended for You</span>
           <span class="knn-badge"><i class="bi bi-stars me-1"></i>KNN</span>
+          {% endif %}
         </div>
         <a href="{% url 'recommendations' %}" class="btn-outline-sm">View All</a>
       </div>
+
+      {% if is_new_user %}
+      <div class="popular-note">
+        <i class="bi bi-info-circle me-1"></i>
+        These are the most popular upcoming events on campus. Register for events and leave feedback to get personalised KNN recommendations.
+      </div>
+      {% else %}
       <div class="knn-note">
         <i class="bi bi-info-circle me-1"></i>
         These recommendations are generated based on your interests using the KNN algorithm.
       </div>
+      {% endif %}
+
       <div class="row g-3">
         {% for event in recommended_events %}
         <div class="col-md-4">
           <div class="card event-card yellow h-100 p-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <span class="badge" style="background:var(--yellow);color:#554400;font-size:0.75rem;">{{ event.category.name }}</span>
+              {% if is_new_user %}
+              <span class="popular-badge" style="font-size:0.65rem;">Popular</span>
+              {% else %}
               <span class="knn-badge" style="font-size:0.65rem;">For you</span>
+              {% endif %}
             </div>
             <h6 class="fw-bold mb-1">{{ event.title }}</h6>
             <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">{{ event.description }}</p>
@@ -129,7 +149,7 @@
         </div>
         {% empty %}
         <div class="col-12">
-          <p style="color:var(--muted);font-size:0.88rem;">Register for events and leave feedback to get personalised recommendations.</p>
+          <p style="color:var(--muted);font-size:0.88rem;">No upcoming events available at the moment.</p>
         </div>
         {% endfor %}
       </div>
