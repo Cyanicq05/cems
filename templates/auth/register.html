@@ -229,11 +229,9 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Email address</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                <input type="email" name="email" class="form-control"
-                  placeholder="w12345678@northumbria.ac.uk"
+                <input type="email" name="email" class="form-control" placeholder="w12345678@northumbria.ac.uk"
                   pattern="^[a-zA-Z0-9._%+\-]+@northumbria\.ac\.uk$"
-                  title="Please use your Northumbria University email (@northumbria.ac.uk)"
-                  required />
+                  title="Please use your Northumbria University email (@northumbria.ac.uk)" required />
               </div>
             </div>
             <div class="mb-3">
@@ -253,23 +251,14 @@
                 <input type="password" name="password2" class="form-control" placeholder="Repeat your password"
                   required />
               </div>
-              <small style="font-size:0.78rem;color:var(--muted);margin-top:4px;display:block;">
-                <i class="bi bi-info-circle me-1"></i>Must match your password.
-              </small>
-            </div>
 
-            <div class="info-note mb-3">
-              <i class="bi bi-info-circle me-1"></i>
-              Student accounts give you access to browse and register for campus events.
-            </div>
+              <button type="submit" class="btn-dark-custom">
+                <i class="bi bi-person-plus me-2"></i>Create Account
+              </button>
 
-            <button type="submit" class="btn-dark-custom">
-              <i class="bi bi-person-plus me-2"></i>Create Account
-            </button>
-
-            <p class="text-center mt-3 mb-0" style="font-size:0.85rem;color:var(--muted);">
-              Already have an account? <a href="{% url 'login' %}"><strong>Log In</strong></a>
-            </p>
+              <p class="text-center mt-3 mb-0" style="font-size:0.85rem;color:var(--muted);">
+                Already have an account? <a href="{% url 'login' %}"><strong>Log In</strong></a>
+              </p>
           </form>
         </div>
       </div>
