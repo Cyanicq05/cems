@@ -1,89 +1,146 @@
 import pandas as pd
-import numpy as np
+from collections import Counter
 from sklearn.neighbors import NearestNeighbors
 from .models import Event, Registration, Feedback
 
 
 def get_recommendations(user, n_recommendations=3):
     """
-    KNN-based event recommender.
-    Finds similar students based on their feedback ratings,
-    then recommends events those students liked that the current user hasn't registered for.
+    KNN-based recommender using both registrations and feedback ratings.
+    - Registration counts as value 1
+    - Feedback rating (1-5) overrides the registration value if present
+    This means users get recommendations even if they never leave feedback.
     """
 
-    # Step 1: Get all feedback data
-    feedbacks = Feedback.objects.select_related('student', 'event').all()
+    # Get events the user already registered for (as a Python set)
+    registered_ids = set(
+        Registration.objects.filter(student=user).values_list('event_id', flat=True)
+    )
 
-    if not feedbacks.exists():
-        return Event.objects.none()
+    # ── COLD START: user has no registrations at all ──────────────────────────
+    if not registered_ids:
+        return list(
+            Event.objects.order_by('-date')[:n_recommendations]
+        )
 
-    # Step 2: Build a user-event rating matrix
-    data = []
-    for f in feedbacks:
-        data.append({
-            'user_id': f.student.id,
-            'event_id': f.event.id,
-            'rating': f.rating
-        })
+    # ── BUILD USER-EVENT MATRIX from registrations ────────────────────────────
+    # Start with all registrations, value = 1
+    all_registrations = Registration.objects.select_related('student', 'event').all()
+    data = {}
+    for r in all_registrations:
+        key = (r.student.id, r.event.id)
+        data[key] = 1  # registered = 1
 
-    df = pd.DataFrame(data)
+    # Override with actual rating if feedback exists (rating 1-5 is more informative)
+    all_feedbacks = Feedback.objects.select_related('student', 'event').all()
+    for f in all_feedbacks:
+        key = (f.student.id, f.event.id)
+        data[key] = f.rating  # rating overrides the default 1
 
-    if df.empty:
-        return Event.objects.none()
+    if not data:
+        return list(
+            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+        )
 
-    # Pivot table: rows = users, columns = events, values = ratings
-    matrix = df.pivot_table(index='user_id', columns='event_id', values='rating', fill_value=0)
+    # Convert to DataFrame
+    rows = [{'user_id': k[0], 'event_id': k[1], 'value': v} for k, v in data.items()]
+    df = pd.DataFrame(rows)
+    matrix = df.pivot_table(index='user_id', columns='event_id', values='value', fill_value=0)
 
-    # Step 3: Check if current user is in the matrix
+    # ── COLD START: user not in matrix yet ────────────────────────────────────
     if user.id not in matrix.index:
-        # User has no feedback yet — return popular events they haven't registered for
-        registered_ids = Registration.objects.filter(
-            student=user
-        ).values_list('event_id', flat=True)
-        return Event.objects.exclude(id__in=registered_ids)[:n_recommendations]
+        return list(
+            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+        )
 
-    # Step 4: Fit KNN model
-    n_neighbors = min(5, len(matrix))
+    # ── FIT KNN ───────────────────────────────────────────────────────────────
+    n_neighbors = min(6, len(matrix))  # +1 to account for self
     model = NearestNeighbors(n_neighbors=n_neighbors, metric='cosine', algorithm='brute')
     model.fit(matrix.values)
 
-    # Step 5: Find similar users
     user_index = matrix.index.get_loc(user.id)
     user_vector = matrix.iloc[user_index].values.reshape(1, -1)
     distances, indices = model.kneighbors(user_vector)
 
-    # Step 6: Get events the similar users rated highly (4 or 5)
-    similar_user_ids = [matrix.index[i] for i in indices[0] if matrix.index[i] != user.id]
+    # Exclude self from neighbours
+    similar_user_ids = [
+        matrix.index[i]
+        for i in indices[0]
+        if matrix.index[i] != user.id
+    ][:5]
 
-    candidate_event_ids = Feedback.objects.filter(
-        student_id__in=similar_user_ids,
-        rating__gte=4
-    ).values_list('event_id', flat=True)
+    if not similar_user_ids:
+        return list(
+            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+        )
 
-    # Step 7: Remove events the current user already registered for
-    registered_ids = Registration.objects.filter(
-        student=user
-    ).values_list('event_id', flat=True)
+    # ── GET CATEGORY PREFERENCES from user's own registrations ───────────────
+    preferred_categories = set(
+        Event.objects.filter(id__in=registered_ids).values_list('category__name', flat=True)
+    )
 
-    recommended_ids = [
-        eid for eid in candidate_event_ids
-        if eid not in list(registered_ids)
-    ]
+    # ── GET CANDIDATE EVENTS from similar users (registered OR rated highly) ──
+    # Events similar users registered for
+    neighbour_registered = list(
+        Registration.objects.filter(
+            student_id__in=similar_user_ids
+        ).values_list('event_id', flat=True)
+    )
 
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_ids = []
-    for eid in recommended_ids:
-        if eid not in seen:
-            seen.add(eid)
-            unique_ids.append(eid)
+    # Events similar users rated 4 or 5 (extra weight)
+    neighbour_highly_rated = list(
+        Feedback.objects.filter(
+            student_id__in=similar_user_ids,
+            rating__gte=4
+        ).values_list('event_id', flat=True)
+    )
 
-    # Step 8: Return recommended Event objects
+    # Count appearances — highly rated events get counted twice (more weight)
+    event_counts = Counter(neighbour_registered)
+    for eid in neighbour_highly_rated:
+        event_counts[eid] += 1  # extra +1 for high rating
+
+    # ── SCORE EACH CANDIDATE ──────────────────────────────────────────────────
+    scored = {}
+    for event_id, count in event_counts.items():
+        if event_id in registered_ids:
+            continue  # skip events user already registered for
+        try:
+            event = Event.objects.get(id=event_id)
+            category_bonus = 2 if event.category.name in preferred_categories else 0
+            scored[event_id] = count + category_bonus
+        except Event.DoesNotExist:
+            pass
+
+    # Sort by score descending
+    ranked_ids = sorted(scored, key=scored.get, reverse=True)
+
+    # ── BUILD RESULT LIST ─────────────────────────────────────────────────────
     recommended_events = []
-    for eid in unique_ids[:n_recommendations]:
+    for eid in ranked_ids[:n_recommendations]:
         try:
             recommended_events.append(Event.objects.get(id=eid))
         except Event.DoesNotExist:
             pass
+
+    # ── PAD WITH CATEGORY-MATCHED EVENTS if not enough results ───────────────
+    if len(recommended_events) < n_recommendations and preferred_categories:
+        existing_ids = set(e.id for e in recommended_events) | registered_ids
+        extras = Event.objects.filter(
+            category__name__in=preferred_categories
+        ).exclude(id__in=existing_ids).order_by('-date')
+        for event in extras:
+            if len(recommended_events) >= n_recommendations:
+                break
+            recommended_events.append(event)
+
+    # ── FINAL PAD with any remaining upcoming events ──────────────────────────
+    if len(recommended_events) < n_recommendations:
+        existing_ids = set(e.id for e in recommended_events) | registered_ids
+        extras = Event.objects.exclude(id__in=existing_ids).order_by('-date')
+        for event in extras:
+            if len(recommended_events) >= n_recommendations:
+                break
+            recommended_events.append(event)
 
     return recommended_events

@@ -27,7 +27,6 @@ def logout_view(request):
 
 def register_view(request):
     if request.method == 'POST':
-        full_name = request.POST.get('full_name')
         username = request.POST.get('username')
         email = request.POST.get('email')
         password1 = request.POST.get('password1')
@@ -39,6 +38,9 @@ def register_view(request):
         if password1 != password2:
             return render(request, 'auth/register.html', {'error': 'Passwords do not match.'})
 
+        if len(password1) < 8:
+            return render(request, 'auth/register.html', {'error': 'Password must be at least 8 characters.'})
+
         if CustomUser.objects.filter(username=username).exists():
             return render(request, 'auth/register.html', {'error': 'Username already taken.'})
 
@@ -46,9 +48,6 @@ def register_view(request):
             return render(request, 'auth/register.html', {'error': 'Email already registered.'})
 
         user = CustomUser.objects.create_user(username=username, email=email, password=password1)
-        name_parts = full_name.split(' ', 1)
-        user.first_name = name_parts[0]
-        user.last_name = name_parts[1] if len(name_parts) > 1 else ''
         user.role = 'student'
         user.save()
 
@@ -56,3 +55,4 @@ def register_view(request):
         return redirect('student_dashboard')
 
     return render(request, 'auth/register.html')
+    

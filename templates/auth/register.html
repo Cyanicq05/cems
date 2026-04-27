@@ -24,7 +24,7 @@
     .form-control,.form-select { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
     .form-control:focus,.form-select:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
     .input-group-text { background:#f9f9f9; border-color:#ddd; border-radius:10px 0 0 10px; }
-    .input-group .form-control,.input-group .form-select { border-radius:0 10px 10px 0; }
+    .input-group .form-control { border-radius:0 10px 10px 0; }
     .btn-dark-custom { background-color:var(--dark); color:#fff; border:none; border-radius:10px; padding:11px; font-weight:600; font-size:0.9rem; width:100%; cursor:pointer; margin-top:8px; }
     .btn-dark-custom:hover { background:#333; }
     .info-note { background:#fffde7; border-left:3px solid var(--yellow); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.8rem; color:#665500; }
@@ -72,13 +72,6 @@
           <form method="post">
             {% csrf_token %}
             <div class="mb-3">
-              <label class="form-label fw-500" style="font-size:0.88rem;">Full name</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
-                <input type="text" name="full_name" class="form-control" placeholder="Enter your full name" required />
-              </div>
-            </div>
-            <div class="mb-3">
               <label class="form-label fw-500" style="font-size:0.88rem;">Username</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-at text-muted"></i></span>
@@ -103,7 +96,7 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Password</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
-                <input type="password" name="password1" class="form-control" placeholder="Create a password" required />
+                <input type="password" name="password1" class="form-control" placeholder="Create a password" required minlength="8" />
               </div>
               <small style="font-size:0.78rem;color:var(--muted);margin-top:4px;display:block;">
                 <i class="bi bi-info-circle me-1"></i>Must be at least 8 characters.
@@ -113,7 +106,7 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Confirm password</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
-                <input type="password" name="password2" class="form-control" placeholder="Repeat your password" required />
+                <input type="password" name="password2" class="form-control" placeholder="Repeat your password" required minlength="8" />
               </div>
             </div>
 

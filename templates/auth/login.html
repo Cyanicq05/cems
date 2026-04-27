@@ -1,37 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   {% load static %}
-<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CEMS — Log In</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
-    :root { --bg:#f5f0e8; --dark:#1a1a1a; --card:#ffffff; --text:#1a1a1a; --muted:#777; --yellow:#f5e642; --green:#b5d98f; --pink:#f5a7c7; }
-    * { box-sizing:border-box; }
-    body { background-color:var(--bg); min-height:100vh; display:flex; flex-direction:column; font-family:'Segoe UI',sans-serif; }
-    .top-bar { background-color:var(--dark); height:54px; display:flex; align-items:center; padding:0 24px; justify-content:space-between; }
-    .brand { font-weight:700; font-size:1.1rem; color:#fff; text-decoration:none; display:flex; align-items:center; gap:8px; }
-    .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
-    .login-card { background:var(--card); border-radius:20px; border:none; box-shadow:0 4px 24px rgba(0,0,0,0.08); overflow:hidden; }
-    .card-accent { height:6px; background:linear-gradient(90deg,var(--yellow) 33%,var(--green) 33% 66%,var(--pink) 66%); }
-    .logo-box { width:56px; height:56px; background:var(--yellow); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; }
-    .nav-tabs { border-bottom:1px solid #eee; }
-    .nav-tabs .nav-link { color:var(--muted); font-size:0.9rem; border:none; }
-    .nav-tabs .nav-link.active { color:var(--text); font-weight:600; border-bottom:2px solid var(--dark); background:none; }
-    .form-control { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
-    .form-control:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
-    .input-group-text { background:#f9f9f9; border-color:#ddd; border-radius:10px 0 0 10px; }
-    .input-group .form-control { border-radius:0 10px 10px 0; }
-    .btn-dark-custom { background-color:var(--dark); color:#fff; border:none; border-radius:10px; padding:11px; font-weight:600; font-size:0.9rem; width:100%; cursor:pointer; transition:background 0.2s; }
-    .btn-dark-custom:hover { background:#333; }
-    .alert-error { background:#fff0f0; border:1px solid #ffcccc; color:#cc0000; border-radius:10px; padding:10px 14px; font-size:0.88rem; margin-bottom:16px; }
-    a { color:var(--dark); }
-    footer { margin-top:auto; }
+    :root {
+      --bg: #f5f0e8;
+      --dark: #1a1a1a;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #777;
+      --yellow: #f5e642;
+      --green: #b5d98f;
+      --pink: #f5a7c7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .top-bar {
+      background-color: var(--dark);
+      height: 54px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      justify-content: space-between;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .login-card {
+      background: var(--card);
+      border-radius: 20px;
+      border: none;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .card-accent {
+      height: 6px;
+      background: linear-gradient(90deg, var(--yellow) 33%, var(--green) 33% 66%, var(--pink) 66%);
+    }
+
+    .logo-box {
+      width: 56px;
+      height: 56px;
+      background: var(--yellow);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+
+    .nav-tabs {
+      border-bottom: 1px solid #eee;
+    }
+
+    .nav-tabs .nav-link {
+      color: var(--muted);
+      font-size: 0.9rem;
+      border: none;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--text);
+      font-weight: 600;
+      border-bottom: 2px solid var(--dark);
+      background: none;
+    }
+
+    .form-control {
+      border-color: #ddd;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+    }
+
+    .form-control:focus {
+      border-color: var(--dark);
+      box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+    }
+
+    .input-group-text {
+      background: #f9f9f9;
+      border-color: #ddd;
+      border-radius: 10px 0 0 10px;
+    }
+
+    .input-group .form-control {
+      border-radius: 0 10px 10px 0;
+    }
+
+    .btn-dark-custom {
+      background-color: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-dark-custom:hover {
+      background: #333;
+    }
+
+    .alert-error {
+      background: #fff0f0;
+      border: 1px solid #ffcccc;
+      color: #cc0000;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+    }
+
+    a {
+      color: var(--dark);
+    }
+
+    footer {
+      margin-top: auto;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="top-bar">
@@ -56,7 +183,7 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
           </ul>
         </div>
-        <hr class="mt-0 mb-3 mx-4"/>
+        <hr class="mt-0 mb-3 mx-4" />
         <div class="px-4 pb-4">
 
           {% if form.errors %}
@@ -71,14 +198,15 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Username</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
-                <input type="text" name="username" class="form-control" placeholder="Enter your username" required/>
+                <input type="text" name="username" class="form-control" placeholder="Enter your username" required />
               </div>
             </div>
             <div class="mb-2">
               <label class="form-label fw-500" style="font-size:0.88rem;">Password</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
-                <input type="password" name="password" class="form-control" placeholder="Enter your password" required/>
+                <input type="password" name="password" class="form-control" placeholder="Enter your password"
+                  required />
               </div>
             </div>
             <div class="text-end mb-3">
@@ -98,7 +226,10 @@
     </div>
   </div>
 
-  <footer class="text-center py-3"><p class="mb-0" style="font-size:0.8rem;color:var(--muted);">&copy; 2025 Campus Event Management System</p></footer>
+  <footer class="text-center py-3">
+    <p class="mb-0" style="font-size:0.8rem;color:var(--muted);">&copy; 2025 Campus Event Management System</p>
+  </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
