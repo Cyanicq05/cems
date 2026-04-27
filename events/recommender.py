@@ -9,7 +9,8 @@ def get_recommendations(user, n_recommendations=3):
     KNN-based recommender using both registrations and feedback ratings.
     - Registration counts as value 1
     - Feedback rating (1-5) overrides the registration value if present
-    This means users get recommendations even if they never leave feedback.
+    - Category bonus is weighted by how many times the user registered in that category
+      e.g. 3x Sports = higher bonus than 1x Social
     """
 
     # Get events the user already registered for (as a Python set)
@@ -24,14 +25,13 @@ def get_recommendations(user, n_recommendations=3):
         )
 
     # ── BUILD USER-EVENT MATRIX from registrations ────────────────────────────
-    # Start with all registrations, value = 1
     all_registrations = Registration.objects.select_related('student', 'event').all()
     data = {}
     for r in all_registrations:
         key = (r.student.id, r.event.id)
         data[key] = 1  # registered = 1
 
-    # Override with actual rating if feedback exists (rating 1-5 is more informative)
+    # Override with actual rating if feedback exists
     all_feedbacks = Feedback.objects.select_related('student', 'event').all()
     for f in all_feedbacks:
         key = (f.student.id, f.event.id)
@@ -74,20 +74,23 @@ def get_recommendations(user, n_recommendations=3):
             Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
         )
 
-    # ── GET CATEGORY PREFERENCES from user's own registrations ───────────────
-    preferred_categories = set(
+    # ── GET CATEGORY PREFERENCES weighted by frequency ───────────────────────
+    # e.g. if user registered for Sports 3 times and Social 1 time:
+    # category_freq = {'Sports': 3, 'Social': 1}
+    user_categories = list(
         Event.objects.filter(id__in=registered_ids).values_list('category__name', flat=True)
     )
+    category_freq = Counter(user_categories)  # {'Sports': 3, 'Social': 1}
+    max_freq = max(category_freq.values()) if category_freq else 1
+    preferred_categories = set(category_freq.keys())
 
-    # ── GET CANDIDATE EVENTS from similar users (registered OR rated highly) ──
-    # Events similar users registered for
+    # ── GET CANDIDATE EVENTS from similar users ───────────────────────────────
     neighbour_registered = list(
         Registration.objects.filter(
             student_id__in=similar_user_ids
         ).values_list('event_id', flat=True)
     )
 
-    # Events similar users rated 4 or 5 (extra weight)
     neighbour_highly_rated = list(
         Feedback.objects.filter(
             student_id__in=similar_user_ids,
@@ -95,19 +98,23 @@ def get_recommendations(user, n_recommendations=3):
         ).values_list('event_id', flat=True)
     )
 
-    # Count appearances — highly rated events get counted twice (more weight)
     event_counts = Counter(neighbour_registered)
     for eid in neighbour_highly_rated:
         event_counts[eid] += 1  # extra +1 for high rating
 
     # ── SCORE EACH CANDIDATE ──────────────────────────────────────────────────
+    # Category bonus is proportional to how often user registered in that category
+    # e.g. Sports (3 times) → bonus = (3/3) * 4 = 4.0
+    #      Social (1 time)  → bonus = (1/3) * 4 = 1.3
+    #      Career (0 times) → bonus = 0
     scored = {}
     for event_id, count in event_counts.items():
         if event_id in registered_ids:
-            continue  # skip events user already registered for
+            continue  # skip already registered
         try:
             event = Event.objects.get(id=event_id)
-            category_bonus = 2 if event.category.name in preferred_categories else 0
+            freq = category_freq.get(event.category.name, 0)
+            category_bonus = (freq / max_freq) * 4  # max bonus = 4 for top category
             scored[event_id] = count + category_bonus
         except Event.DoesNotExist:
             pass
@@ -123,18 +130,24 @@ def get_recommendations(user, n_recommendations=3):
         except Event.DoesNotExist:
             pass
 
-    # ── PAD WITH CATEGORY-MATCHED EVENTS if not enough results ───────────────
+    # ── PAD WITH CATEGORY-MATCHED EVENTS weighted by frequency ───────────────
     if len(recommended_events) < n_recommendations and preferred_categories:
         existing_ids = set(e.id for e in recommended_events) | registered_ids
-        extras = Event.objects.filter(
-            category__name__in=preferred_categories
-        ).exclude(id__in=existing_ids).order_by('-date')
-        for event in extras:
+        # Order padding by most-registered category first
+        top_categories = [cat for cat, _ in category_freq.most_common()]
+        for cat in top_categories:
             if len(recommended_events) >= n_recommendations:
                 break
-            recommended_events.append(event)
+            extras = Event.objects.filter(
+                category__name=cat
+            ).exclude(id__in=existing_ids).order_by('-date')
+            for event in extras:
+                if len(recommended_events) >= n_recommendations:
+                    break
+                recommended_events.append(event)
+                existing_ids.add(event.id)
 
-    # ── FINAL PAD with any remaining upcoming events ──────────────────────────
+    # ── FINAL PAD with any remaining events ──────────────────────────────────
     if len(recommended_events) < n_recommendations:
         existing_ids = set(e.id for e in recommended_events) | registered_ids
         extras = Event.objects.exclude(id__in=existing_ids).order_by('-date')
