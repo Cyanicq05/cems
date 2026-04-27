@@ -141,7 +141,7 @@ def my_feedback(request):
 @login_required(login_url='/login/')
 def recommendations(request):
     from .recommender import get_recommendations
-    recommended_events = get_recommendations(request.user)
+    recommended_events = get_recommendations(request.user, n_recommendations=6)
     return render(request, 'student/recommendations.html', {'recommended_events': recommended_events})
 
 
