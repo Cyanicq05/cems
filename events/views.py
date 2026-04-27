@@ -82,6 +82,7 @@ def my_registrations(request):
         'registrations': registrations,
         'active_count': active_count,
         'cancelled_count': cancelled_count,
+        'total_count': active_count,  # total = active only, excludes cancelled
     })
 
 
@@ -148,25 +149,34 @@ def recommendations(request):
 def student_dashboard(request):
     from .recommender import get_recommendations
     from django.db.models import Count
+
+    today = datetime.date.today()
+
     registrations = Registration.objects.filter(student=request.user, status='registered')
     feedback_count = Feedback.objects.filter(student=request.user).count()
+
+    # Get IDs of events user already registered for
+    registered_ids = set(registrations.values_list('event_id', flat=True))
+
+    # KNN recommendations (already excludes registered events)
     recommended_events = get_recommendations(request.user, n_recommendations=3)
 
-    # Fallback for new users: show upcoming popular events by registration count
-    is_new_user = not recommended_events
-    if is_new_user:
-        recommended_events = Event.objects.filter(
-            date__gte=datetime.date.today()
-        ).annotate(
-            reg_count=Count('registration')
-        ).order_by('-reg_count')[:3]
+    # Popular events — upcoming only, excluding already registered
+    popular_events = Event.objects.filter(
+        date__gte=today
+    ).exclude(
+        id__in=registered_ids
+    ).annotate(
+        reg_count=Count('registration')
+    ).order_by('-reg_count')[:3]
 
     context = {
         'registrations': registrations,
         'registered_count': registrations.count(),
         'feedback_count': feedback_count,
         'recommended_events': recommended_events,
-        'is_new_user': is_new_user,
+        'popular_events': popular_events,
+        'is_new_user': not recommended_events,
     }
     return render(request, 'student/dashboard.html', context)
 
