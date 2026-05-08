@@ -21,13 +21,12 @@
     .nav-tabs { border-bottom:1px solid #eee; }
     .nav-tabs .nav-link { color:var(--muted); font-size:0.9rem; border:none; }
     .nav-tabs .nav-link.active { color:var(--text); font-weight:600; border-bottom:2px solid var(--dark); background:none; }
-    .form-control,.form-select { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
-    .form-control:focus,.form-select:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
+    .form-control { border-color:#ddd; border-radius:10px; padding:10px 14px; font-size:0.9rem; }
+    .form-control:focus { border-color:var(--dark); box-shadow:0 0 0 3px rgba(26,26,26,0.08); }
     .input-group-text { background:#f9f9f9; border-color:#ddd; border-radius:10px 0 0 10px; }
     .input-group .form-control { border-radius:0 10px 10px 0; }
     .btn-dark-custom { background-color:var(--dark); color:#fff; border:none; border-radius:10px; padding:11px; font-weight:600; font-size:0.9rem; width:100%; cursor:pointer; margin-top:8px; }
     .btn-dark-custom:hover { background:#333; }
-    .info-note { background:#fffde7; border-left:3px solid var(--yellow); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.8rem; color:#665500; }
     .alert-error { background:#fff0f0; border:1px solid #ffcccc; color:#cc0000; border-radius:10px; padding:10px 14px; font-size:0.88rem; margin-bottom:16px; }
     a { color:var(--dark); }
     footer { margin-top:auto; }
@@ -60,11 +59,6 @@
         <hr class="mt-0 mb-3 mx-4" />
         <div class="px-4 pb-4">
 
-          <div class="info-note mb-3">
-            <i class="bi bi-envelope me-1"></i>
-            You must use your Northumbria University email (<strong>@northumbria.ac.uk</strong>) to register.
-          </div>
-
           {% if error %}
           <div class="alert-error"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
           {% endif %}
@@ -85,11 +79,7 @@
               <label class="form-label fw-500" style="font-size:0.88rem;">Email address</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                <input type="email" name="email" class="form-control"
-                  placeholder="w12345678@northumbria.ac.uk"
-                  pattern="^[a-zA-Z0-9._%+\-]+@northumbria\.ac\.uk$"
-                  title="Please use your Northumbria University email (@northumbria.ac.uk)"
-                  required />
+                <input type="email" name="email" class="form-control" placeholder="Enter your email address" required />
               </div>
             </div>
             <div class="mb-3">
