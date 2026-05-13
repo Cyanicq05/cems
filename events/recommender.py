@@ -15,7 +15,8 @@ def get_recommendations(user, n_recommendations=3):
 
     # Get events the user already registered for (as a Python set)
     registered_ids = set(
-        Registration.objects.filter(student=user).values_list('event_id', flat=True)
+        Registration.objects.filter(
+            student=user).values_list('event_id', flat=True)
     )
 
     # ── COLD START: user has no registrations at all ──────────────────────────
@@ -25,7 +26,8 @@ def get_recommendations(user, n_recommendations=3):
         )
 
     # ── BUILD USER-EVENT MATRIX from registrations ────────────────────────────
-    all_registrations = Registration.objects.select_related('student', 'event').all()
+    all_registrations = Registration.objects.select_related(
+        'student', 'event').all()
     data = {}
     for r in all_registrations:
         key = (r.student.id, r.event.id)
@@ -39,23 +41,28 @@ def get_recommendations(user, n_recommendations=3):
 
     if not data:
         return list(
-            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+            Event.objects.exclude(id__in=registered_ids).order_by(
+                '-date')[:n_recommendations]
         )
 
     # Convert to DataFrame
-    rows = [{'user_id': k[0], 'event_id': k[1], 'value': v} for k, v in data.items()]
+    rows = [{'user_id': k[0], 'event_id': k[1], 'value': v}
+            for k, v in data.items()]
     df = pd.DataFrame(rows)
-    matrix = df.pivot_table(index='user_id', columns='event_id', values='value', fill_value=0)
+    matrix = df.pivot_table(
+        index='user_id', columns='event_id', values='value', fill_value=0)
 
     # ── COLD START: user not in matrix yet ────────────────────────────────────
     if user.id not in matrix.index:
         return list(
-            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+            Event.objects.exclude(id__in=registered_ids).order_by(
+                '-date')[:n_recommendations]
         )
 
     # ── FIT KNN ───────────────────────────────────────────────────────────────
     n_neighbors = min(6, len(matrix))  # +1 to account for self
-    model = NearestNeighbors(n_neighbors=n_neighbors, metric='cosine', algorithm='brute')
+    model = NearestNeighbors(n_neighbors=n_neighbors,
+                             metric='cosine', algorithm='brute')
     model.fit(matrix.values)
 
     user_index = matrix.index.get_loc(user.id)
@@ -71,14 +78,16 @@ def get_recommendations(user, n_recommendations=3):
 
     if not similar_user_ids:
         return list(
-            Event.objects.exclude(id__in=registered_ids).order_by('-date')[:n_recommendations]
+            Event.objects.exclude(id__in=registered_ids).order_by(
+                '-date')[:n_recommendations]
         )
 
     # ── GET CATEGORY PREFERENCES weighted by frequency ───────────────────────
     # e.g. if user registered for Sports 3 times and Social 1 time:
     # category_freq = {'Sports': 3, 'Social': 1}
     user_categories = list(
-        Event.objects.filter(id__in=registered_ids).values_list('category__name', flat=True)
+        Event.objects.filter(id__in=registered_ids).values_list(
+            'category__name', flat=True)
     )
     category_freq = Counter(user_categories)  # {'Sports': 3, 'Social': 1}
     max_freq = max(category_freq.values()) if category_freq else 1
@@ -114,7 +123,8 @@ def get_recommendations(user, n_recommendations=3):
         try:
             event = Event.objects.get(id=event_id)
             freq = category_freq.get(event.category.name, 0)
-            category_bonus = (freq / max_freq) * 4  # max bonus = 4 for top category
+            # max bonus = 4 for top category
+            category_bonus = (freq / max_freq) * 4
             scored[event_id] = count + category_bonus
         except Event.DoesNotExist:
             pass
@@ -157,3 +167,5 @@ def get_recommendations(user, n_recommendations=3):
             recommended_events.append(event)
 
     return recommended_events
+
+
